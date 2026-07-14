@@ -2,7 +2,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 import ssl
-import dj_database_url  # ← AJOUTER CET IMPORT
+import dj_database_url
 
 
 # NOTE (fix Avast/antivirus) :
@@ -57,17 +57,17 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_otp',
     'django_otp.plugins.otp_totp',
-    'whitenoise',  # ← AJOUTÉ pour les fichiers statiques en production
+    'whitenoise',
 
     # ========== VOS APPLICATIONS ==========
-    'audit.apps.AuditConfig',
-    'authentication.apps.AuthenticationConfig',
-    'terrains.apps.TerrainsConfig',
-    'reservations.apps.ReservationsConfig',
-    'concessions.apps.ConcessionsConfig',
-    'finances.apps.FinancesConfig',
-    'dashboard.apps.DashboardConfig',
-    'flet_app.apps.FletAppConfig',
+    'audit',
+    'authentication',
+    'terrains',
+    'reservations',
+    'concessions',
+    'finances',
+    'dashboard',
+    'flet_app',
 ]
 
 # ============================================
@@ -76,7 +76,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # ← AJOUTÉ (après SecurityMiddleware)
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -118,7 +118,7 @@ if os.getenv('DATABASE_URL'):
         'default': dj_database_url.config(
             default=os.getenv('DATABASE_URL'),
             conn_max_age=600,
-            ssl_require=not DEBUG  # SSL en production uniquement
+            ssl_require=not DEBUG
         )
     }
 else:
@@ -204,9 +204,6 @@ if os.getenv('EMAIL_HOST_USER'):
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@gestionfuneraire.com')
 
-    # FIX : erreur "Basic Constraints of CA cert not marked critical",
-    # causée par l'inspection SSL d'un antivirus (Avast, etc.) qui génère
-    # de faux certificats mal formés, rejetés par OpenSSL 3.x.
     if os.getenv('EMAIL_SSL_VERIFY', 'True') == 'False':
         EMAIL_BACKEND = 'core.email_backend.InsecureSMTPEmailBackend'
     else:
