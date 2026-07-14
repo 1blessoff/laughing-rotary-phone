@@ -3,7 +3,7 @@ from authentication.views import auth_router
 from terrains.api import router as terrains_router
 from reservations.api import router as reservations_router
 from concessions.api import router as concessions_router
-from backend.finances.api_paiements import router as finances_router
+from finances.api_paiements import router as finances_router
 from audit.api import router as audit_router
 
 
