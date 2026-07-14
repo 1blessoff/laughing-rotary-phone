@@ -2,6 +2,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 import ssl
+import dj_database_url  # ← AJOUTER CET IMPORT
 
 
 # NOTE (fix Avast/antivirus) :
@@ -56,6 +57,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_otp',
     'django_otp.plugins.otp_totp',
+    'whitenoise',  # ← AJOUTÉ pour les fichiers statiques en production
 
     # ========== VOS APPLICATIONS ==========
     'audit.apps.AuditConfig',
@@ -72,8 +74,9 @@ INSTALLED_APPS = [
 # MIDDLEWARE
 # ============================================
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware', 
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # ← AJOUTÉ (après SecurityMiddleware)
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -106,21 +109,32 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 # ============================================
-# DATABASE - PostgreSQL
+# DATABASE - PostgreSQL (avec support Render)
 # ============================================
-DATABASES = {
-    'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-        'NAME': os.getenv('DB_NAME', 'gestion_funeraire'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-        'OPTIONS': {
-            'options': '-c search_path=public',
-        },
+
+# Utiliser DATABASE_URL pour Render, ou fallback sur les variables individuelles
+if os.getenv('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.getenv('DATABASE_URL'),
+            conn_max_age=600,
+            ssl_require=not DEBUG  # SSL en production uniquement
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+            'NAME': os.getenv('DB_NAME', 'gestion_funeraire'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+            'OPTIONS': {
+                'options': '-c search_path=public',
+            },
+        }
+    }
 
 # ============================================
 # AUTHENTIFICATION
@@ -165,6 +179,9 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+# Configuration de WhiteNoise pour la production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -190,22 +207,12 @@ if os.getenv('EMAIL_HOST_USER'):
     # FIX : erreur "Basic Constraints of CA cert not marked critical",
     # causée par l'inspection SSL d'un antivirus (Avast, etc.) qui génère
     # de faux certificats mal formés, rejetés par OpenSSL 3.x.
-    #
-    # Solution durable : exclure ce processus/python.exe de l'inspection
-    # HTTPS de l'antivirus. En attendant (ou en dev), on peut basculer sur
-    # un backend SMTP qui ne vérifie pas le certificat via la variable
-    # EMAIL_SSL_VERIFY=False dans le .env.
-    #
-    # Ne JAMAIS laisser EMAIL_SSL_VERIFY=False en production de façon
-    # permanente : cela expose à un risque de Man-in-the-Middle sur les
-    # identifiants SMTP.
     if os.getenv('EMAIL_SSL_VERIFY', 'True') == 'False':
         EMAIL_BACKEND = 'core.email_backend.InsecureSMTPEmailBackend'
     else:
         EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 EMAIL_TIMEOUT = 60
-
 
 # ============================================
 # GOOGLE AUTHENTICATOR (OTP)
@@ -255,6 +262,12 @@ if not CORS_ALLOW_ALL_ORIGINS:
         'http://localhost:8000,http://127.0.0.1:8000'
     ).split(',')
 
+# Ajouter les origines Render en production
+if not DEBUG:
+    CORS_ALLOWED_ORIGINS += [
+        'https://*.onrender.com',
+    ]
+
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -282,16 +295,50 @@ else:
     CSRF_COOKIE_SECURE = True
 
 SESSION_COOKIE_SAMESITE = 'Lax'
-CSRF_TRUSTED_ORIGINS = os.getenv(
-    'CSRF_TRUSTED_ORIGINS',
-    'http://localhost:8000,http://127.0.0.1:8000'
-).split(',')
+
+# CSRF Trusted Origins - Ajouter Render en production
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = os.getenv(
+        'CSRF_TRUSTED_ORIGINS',
+        'http://localhost:8000,http://127.0.0.1:8000'
+    ).split(',')
+else:
+    CSRF_TRUSTED_ORIGINS = [
+        'https://*.onrender.com',
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+    ]
 
 # Durée de la session en secondes (1 heure)
 SESSION_COOKIE_AGE = 3600
 
 # Expiration de la session à la fermeture du navigateur
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+# ============================================
+# SECURITY - Production (HTTPS, HSTS, etc.)
+# ============================================
+
+if not DEBUG:
+    # Forcer HTTPS
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    
+    # HSTS (HTTP Strict Transport Security)
+    SECURE_HSTS_SECONDS = 31536000  # 1 an
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    
+    # Autres sécurités
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    
+    # Cookies sécurisés
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    CSRF_COOKIE_HTTPONLY = True
 
 # ============================================
 # SESSION & MFA CONFIGURATION
