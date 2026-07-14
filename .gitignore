@@ -99,4 +99,4 @@ yarn-error.log*
 tmp/
 temp/
 *.tmp
-*.temp
+*.temp".env" 
