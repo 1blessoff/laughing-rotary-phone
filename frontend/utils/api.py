@@ -3,7 +3,7 @@ import aiohttp.client_exceptions
 import asyncio
 import json
 
-API_URL = "http://127.0.0.1:8000/api"
+API_URL = "https://gestion-funeraire-api.onrender.com"
 
 # Session globale pour partager les cookies entre toutes les requêtes
 _session = None
