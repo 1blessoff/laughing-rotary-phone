@@ -4,7 +4,7 @@ from utils.session import session
 # Adaptez si votre backend n'est pas en local sur ce port.
 from utils.api import API_URL
 
-# Deduite de API_URL ("http://127.0.0.1:8000/api" -> "http://127.0.0.1:8000")
+# Deduite de API_URL
 # pour n'avoir qu'un seul endroit a changer lors du deploiement.
 CARTE_URL = f"{API_URL.rsplit('/api', 1)[0]}/carte-caveaux/"
 
