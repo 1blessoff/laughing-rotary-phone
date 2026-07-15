@@ -3,7 +3,10 @@ import aiohttp.client_exceptions
 import asyncio
 import json
 
-API_URL = "https://gestion-funeraire-api.onrender.com"
+
+
+API_URL = "https://gestion-funeraire-api.onrender.com/api"
+
 
 # Session globale pour partager les cookies entre toutes les requêtes
 _session = None
@@ -23,14 +26,14 @@ async def close_session():
     if _session and not _session.closed:
         await _session.close()
         _session = None
-        print("🔒 Session fermée")
+        print("Session fermée")
 
 async def get_cookies():
     """Debug: récupérer les cookies actuels"""
     session = await get_session()
     if session and session._cookie_jar:
         cookies = {k: v.value for k, v in session._cookie_jar}
-        print(f"🍪 Cookies actuels: {cookies}")
+        print(f"Cookies actuels: {cookies}")
         return cookies
     return {}
 
@@ -38,63 +41,63 @@ async def post_request(endpoint: str, data: dict = None, params: dict = None):
     """Fonction generique pour les requetes POST asynchrones"""
     url = f"{API_URL}/{endpoint}"
     print(f"\n{'='*60}")
-    print(f"📤 POST {endpoint}")
-    print(f"📍 URL: {url}")
+    print(f"POST {endpoint}")
+    print(f"URL: {url}")
     if params:
-        print(f"📋 Params: {params}")
+        print(f"Params: {params}")
     if data:
-        print(f"📦 Data: {data}")
+        print(f"Data: {data}")
     
     try:
         session = await get_session()
         
         # Debug: afficher les cookies avant la requête
         cookies_before = {k: v.value for k, v in session._cookie_jar.filter_cookies(url).items()}
-        print(f"🍪 Cookies avant requete: {cookies_before}")
+        print(f"Cookies avant requete: {cookies_before}")
         
         timeout = aiohttp.ClientTimeout(total=30)
         async with session.post(url, params=params, json=data, timeout=timeout) as response:
-            print(f"📊 Status: {response.status}")
+            print(f"Status: {response.status}")
             
             # Debug: afficher les cookies reçus
             cookies_recus = {k: v.value for k, v in response.cookies.items()}
-            print(f"🍪 Cookies recus: {cookies_recus}")
+            print(f"Cookies recus: {cookies_recus}")
             
             # Debug: header Set-Cookie (si present)
             set_cookie = response.headers.get('Set-Cookie')
             if set_cookie:
-                print(f"📋 Set-Cookie header: {set_cookie}")
+                print(f"Set-Cookie header: {set_cookie}")
             
             cookies_after = {k: v.value for k, v in session._cookie_jar.filter_cookies(url).items()}
-            print(f"🍪 Cookies après requete: {cookies_after}")
+            print(f"Cookies après requete: {cookies_after}")
             
             try:
                 result = await response.json()
-                print(f"✅ Result: {result}")
+                print(f"Result: {result}")
                 return result
             except Exception as e:
                 text = await response.text()
-                print(f"❌ Response text: {text}")
+                print(f"Response text: {text}")
                 return {"error": f"Erreur de parsing: {e}"}
                 
     except asyncio.TimeoutError:
-        print("⏰ ERREUR: Timeout")
+        print("ERREUR: Timeout")
         return {"error": "Le serveur ne répond pas (timeout)"}
     except aiohttp.ClientError as e:
-        print(f"❌ ERREUR ClientError: {e}")
+        print(f"ERREUR ClientError: {e}")
         return {"error": f"Erreur de connexion: {e}"}
     except Exception as e:
-        print(f"❌ ERREUR: {e}")
+        print(f"ERREUR: {e}")
         return {"error": str(e)}
 
 async def get_request(endpoint: str, params: dict = None):
     """Fonction generique pour les requetes GET asynchrones"""
     url = f"{API_URL}/{endpoint}"
     print(f"\n{'='*60}")
-    print(f"📤 GET {endpoint}")
-    print(f"📍 URL: {url}")
+    print(f"GET {endpoint}")
+    print(f"URL: {url}")
     if params:
-        print(f"📋 Params: {params}")
+        print(f"Params: {params}")
     
     try:
         session = await get_session()
