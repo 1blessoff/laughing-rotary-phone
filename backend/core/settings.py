@@ -350,4 +350,6 @@ RESET_CODE_EXPIRATION = 900
 # ============================================
 # SITE CONFIGURATION
 # ============================================
-SITE_URL = os.getenv('SITE_URL', 'http://127.0.0.1:8000')
+SITE_URL = os.getenv('SITE_URL', 'https://gestion-funeraire-api.onrender.com')
+
+
