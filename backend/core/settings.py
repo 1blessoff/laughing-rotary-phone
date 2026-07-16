@@ -40,7 +40,18 @@ if not SECRET_KEY:
     raise ValueError("La variable SECRET_KEY n'est pas définie dans .env")
 
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
+
+# ✅ CORRECTION ICI : ALLOWED_HOSTS
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+
+# Ajouter les domaines Render en production
+if not DEBUG:
+    ALLOWED_HOSTS += [
+        'laughing-rotary-phone.onrender.com',
+        '.onrender.com',  # Tous les sous-domaines Render
+        '127.0.0.1',
+        'localhost',
+    ]
 
 # ============================================
 # APPLICATION DEFINITION
@@ -263,6 +274,7 @@ if not CORS_ALLOW_ALL_ORIGINS:
 if not DEBUG:
     CORS_ALLOWED_ORIGINS += [
         'https://*.onrender.com',
+        'https://laughing-rotary-phone.onrender.com',
     ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -302,6 +314,7 @@ if DEBUG:
 else:
     CSRF_TRUSTED_ORIGINS = [
         'https://*.onrender.com',
+        'https://laughing-rotary-phone.onrender.com',
         'http://localhost:8000',
         'http://127.0.0.1:8000',
     ]
@@ -350,4 +363,5 @@ RESET_CODE_EXPIRATION = 900
 # ============================================
 # SITE CONFIGURATION
 # ============================================
-SITE_URL = os.getenv('SITE_URL', 'https://gestion-funeraire-api.onrender.com')
+# ✅ CORRECTION ICI
+SITE_URL = os.getenv('SITE_URL', 'https://laughing-rotary-phone.onrender.com')
