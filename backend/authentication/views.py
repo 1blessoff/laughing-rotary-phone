@@ -182,12 +182,6 @@ Si vous n'etes pas a l'origine de cette demande, ignorez cet email.
         }
     }
 
-
-
-
-
-
-
 @auth_router.post("/verify-mfa")
 def verify_mfa(request, data: MFASchema):
     """Verification du code MFA"""
