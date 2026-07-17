@@ -44,6 +44,14 @@ media/
 secrets.json
 
 # ====================
+# Data exports (AJOUTÉ)
+# ====================
+data.json
+*.json
+!requirements.txt
+!package.json
+
+# ====================
 # IDE / Editor
 # ====================
 .vscode/
@@ -99,4 +107,4 @@ yarn-error.log*
 tmp/
 temp/
 *.tmp
-*.temp".env" 
+*.temp
