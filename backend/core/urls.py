@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.http import JsonResponse
 from terrains.views_carte import carte_caveaux_view
 from .api import api
@@ -13,6 +13,7 @@ def home_view(request):
         'endpoints': {
             'admin': '/admin/',
             'api': '/api/',
+            'auth': '/api/auth/',
             'api_docs': '/api/docs',
             'carte_caveaux': '/carte-caveaux/',
         }
@@ -21,6 +22,7 @@ def home_view(request):
 urlpatterns = [
     path('', home_view, name='home'),  # AJOUT DE CETTE LIGNE
     path('admin/', admin.site.urls),
+    path('api/auth/', include('api.urls')),  # Pour l'authentification 
     path('api/', api.urls),  # Swagger disponible à /api/docs
     path("carte-caveaux/", carte_caveaux_view),  # pour la carte des caveaux
 ]
