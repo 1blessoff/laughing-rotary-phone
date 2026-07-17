@@ -5,7 +5,7 @@ import json
 
 
 
-API_URL = "https://gestion-funeraire-api.onrender.com/api"
+API_URL = "https://laughing-rotary-phone.onrender.com"
 
 
 # Session globale pour partager les cookies entre toutes les requêtes
