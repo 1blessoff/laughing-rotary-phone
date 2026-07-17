@@ -1,10 +1,10 @@
+# backend/core/urls.py
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
 from django.http import JsonResponse
 from terrains.views_carte import carte_caveaux_view
-from .api import api
+from .api import api  # API Ninja principale
 
-# Vue pour la page d'accueil
 def home_view(request):
     return JsonResponse({
         'message': 'Bienvenue sur Gestion Funéraire API',
@@ -13,16 +13,24 @@ def home_view(request):
         'endpoints': {
             'admin': '/admin/',
             'api': '/api/',
-            'auth': '/api/auth/',
-            'api_docs': '/api/docs',
+            'docs': '/api/docs',
+            'auth': '/api/auth',
+            'caveaux': '/api/caveaux',
+            'reservations': '/api/reservations',
+            'concessions': '/api/concessions',
+            'paiements': '/api/paiements',
+            'audit': '/api/audit',
             'carte_caveaux': '/carte-caveaux/',
         }
     })
 
 urlpatterns = [
-    path('', home_view, name='home'),  # AJOUT DE CETTE LIGNE
+    path('', home_view, name='home'),
     path('admin/', admin.site.urls),
-    path('api/auth/', include('api.urls')),  # Pour l'authentification 
-    path('api/', api.urls),  # Swagger disponible à /api/docs
-    path("carte-caveaux/", carte_caveaux_view),  # pour la carte des caveaux
+    
+    # TOUTES les routes API via Ninja
+    path('api/', api.urls),  # Cela inclut /api/auth, /api/caveaux, etc.
+    
+    # Autres routes (non-API)
+    path("carte-caveaux/", carte_caveaux_view),
 ]
