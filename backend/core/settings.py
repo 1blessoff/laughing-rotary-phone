@@ -360,8 +360,23 @@ MFA_CODE_EXPIRATION = 300
 # Durée de validité du code de réinitialisation (en secondes) - 15 minutes
 RESET_CODE_EXPIRATION = 900
 
-# ============================================
-# SITE CONFIGURATION
-# ============================================
-# ✅ CORRECTION ICI
+
+# url du site (pour les emails, etc.)
 SITE_URL = os.getenv('SITE_URL', 'https://laughing-rotary-phone.onrender.com')
+
+
+
+# Corrige l'erreur : AttributeError: 'super' object has no attribute 'dicts'
+# Ce bug apparaît avec Django sur Python 3.14
+
+from django.template import Context
+
+def _patched_context_copy(self):
+    """Patch pour contourner le bug de copy sur Python 3.14"""
+    ctx = Context()
+    ctx.dicts = self.dicts[:]
+    return ctx
+
+# Appliquer le patch si la méthode __copy__ existe
+if hasattr(Context, '__copy__'):
+    Context.__copy__ = _patched_context_copy
