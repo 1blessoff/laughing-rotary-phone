@@ -1,4 +1,3 @@
-import threading
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
@@ -16,30 +15,40 @@ User = get_user_model()
 auth_router = Router()
 
 # ============================================
-# ENVOI EMAIL EN ARRIERE-PLAN
+# ENVOI EMAIL
 # ============================================
 
 def send_mail_async(subject, message, recipient_list):
     """
-    Envoie un email dans un thread séparé pour ne pas bloquer la réponse.
+    FIX : envoie l'email de façon SYNCHRONE, dans la requête elle-même.
+
+    Avant, l'envoi se faisait dans un threading.Thread(daemon=True) lancé
+    puis "oublié" (fire-and-forget). Ça fonctionne en développement (le
+    process Python reste vivant), mais casse silencieusement en production
+    sous Gunicorn avec un worker "sync" : dès que la réponse HTTP est
+    envoyée, Gunicorn peut recycler/réutiliser le worker pour la requête
+    suivante, et le thread daemon d'envoi SMTP est interrompu avant d'avoir
+    fini sa connexion - sans lever d'exception visible puisqu'il meurt avec
+    le worker. D'où le comportement observé : le shell Render (process
+    vivant plus longtemps) envoie bien l'email, mais /api/auth/login échoue
+    en silence.
+
+    Le nom de la fonction est conservé (utilisée à plusieurs endroits) mais
+    son comportement est maintenant bloquant et fiable. Le cout est un
+    leger delai supplementaire (1-2s, le temps de la connexion SMTP) sur
+    la reponse de login/reset - c'est le compromis correct pour la fiabilite.
     """
-    def send():
-        try:
-            send_mail(
-                subject=subject,
-                message=message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=recipient_list,
-                fail_silently=False,
-            )
-            print(f"Email envoye a {recipient_list}")
-        except Exception as e:
-            print(f"Erreur email: {e}")
-    
-    thread = threading.Thread(target=send)
-    thread.daemon = True
-    thread.start()
-    print(f"Envoi email lance en arriere-plan pour {recipient_list}")
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=recipient_list,
+            fail_silently=False,
+        )
+        print(f"Email envoye a {recipient_list}")
+    except Exception as e:
+        print(f"Erreur email: {e}")
 
 
 # ============================================
@@ -155,7 +164,7 @@ def login_user(request, data: LoginSchema):
     
     request.session['mfa_user_id'] = user.id
     
-    #  Envoi email en arriere-plan
+    # Envoi email (synchrone - voir le commentaire dans send_mail_async)
     send_mail_async(
         subject="Code de verification - Gestion Funeraire",
         message=f"""
@@ -445,7 +454,7 @@ def toggle_user_active(request, user_id: int):
     user.is_active = not user.is_active
     user.save()
     
-    print(f"✅ Compte {user.username} {'active' if user.is_active else 'desactive'}")
+    print(f"Compte {user.username} {'active' if user.is_active else 'desactive'}")
     
     return {
         "success": True,
