@@ -10,79 +10,37 @@ from datetime import timedelta
 from typing import Optional 
 import random
 import string
-import os  # <-- AJOUTÉ pour debug
+import os
 
 User = get_user_model()
 auth_router = Router()
 
 # ============================================
-# ENVOI EMAIL AVEC LOGS DÉTAILLÉS
+# ENVOI EMAIL - VERSION HARCODÉE (comme le test)
 # ============================================
 
 def send_mail_async(subject, message, recipient_list):
     """
-    Envoie l'email de façon SYNCHRONE avec logs détaillés.
+    Envoi d'email SYNCHRONE - Version hardcodée comme le test qui fonctionne.
+    Utilise directement l'email et le mot de passe application Gmail.
     """
     print("=" * 60)
     print("📧 send_mail_async - DEBUT")
     print(f"📧 Subject: {subject}")
     print(f"📧 Recipient: {recipient_list}")
     
-    # === LOGS DES VARIABLES D'ENVIRONNEMENT ===
-    print("\n--- VARIABLES D'ENVIRONNEMENT ---")
-    email_host = os.getenv('EMAIL_HOST', 'NON DEFINI')
-    email_port = os.getenv('EMAIL_PORT', 'NON DEFINI')
-    email_user = os.getenv('EMAIL_HOST_USER', 'NON DEFINI')
-    email_password = os.getenv('EMAIL_HOST_PASSWORD', 'NON DEFINI')
-    email_from = os.getenv('DEFAULT_FROM_EMAIL', 'NON DEFINI')
-    
-    print(f"📧 EMAIL_HOST: {email_host}")
-    print(f"📧 EMAIL_PORT: {email_port}")
-    print(f"📧 EMAIL_HOST_USER: {email_user}")
-    print(f"📧 EMAIL_HOST_PASSWORD: {'OK (défini)' if email_password != 'NON DEFINI' else 'MANQUANT !'}")
-    print(f"📧 DEFAULT_FROM_EMAIL: {email_from}")
-    
-    # === LOGS DES SETTINGS DJANGO ===
-    print("\n--- SETTINGS DJANGO ---")
     try:
-        print(f"📧 settings.EMAIL_HOST: {settings.EMAIL_HOST}")
-    except AttributeError:
-        print("📧 settings.EMAIL_HOST: NON DEFINI")
-    try:
-        print(f"📧 settings.EMAIL_PORT: {settings.EMAIL_PORT}")
-    except AttributeError:
-        print("📧 settings.EMAIL_PORT: NON DEFINI")
-    try:
-        print(f"📧 settings.EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}")
-    except AttributeError:
-        print("📧 settings.EMAIL_HOST_USER: NON DEFINI")
-    try:
-        print(f"📧 settings.EMAIL_HOST_PASSWORD: {'OK' if settings.EMAIL_HOST_PASSWORD else 'VIDE'}")
-    except AttributeError:
-        print("📧 settings.EMAIL_HOST_PASSWORD: NON DEFINI")
-    try:
-        print(f"📧 settings.DEFAULT_FROM_EMAIL: {settings.DEFAULT_FROM_EMAIL}")
-    except AttributeError:
-        print("📧 settings.DEFAULT_FROM_EMAIL: NON DEFINI")
-    try:
-        print(f"📧 settings.EMAIL_BACKEND: {settings.EMAIL_BACKEND}")
-    except AttributeError:
-        print("📧 settings.EMAIL_BACKEND: NON DEFINI")
-    
-    # === TENTATIVE D'ENVOI ===
-    print("\n--- TENTATIVE D'ENVOI ---")
-    try:
+        # ✅ HARCODÉ comme le test qui fonctionne
         send_mail(
             subject=subject,
             message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            from_email='kouchrist48@gmail.com',  # Hardcodé
             recipient_list=recipient_list,
             fail_silently=False,
         )
         print(f"✅ Email envoye avec succes a {recipient_list}")
     except Exception as e:
         print(f"❌ ERREUR EMAIL: {e}")
-        print(f"❌ Type d'erreur: {type(e).__name__}")
         import traceback
         print(f"❌ Traceback: {traceback.format_exc()}")
     
@@ -207,7 +165,7 @@ def login_user(request, data: LoginSchema):
     
     request.session['mfa_user_id'] = user.id
     
-    # Envoi email avec logs
+    # Envoi email (hardcodé)
     print("\n--- ENVOI DU CODE MFA ---")
     send_mail_async(
         subject="Code de verification - Gestion Funeraire",
@@ -322,19 +280,16 @@ def update_profile(request, data: UpdateProfileSchema):
     user = request.user
     print(f"👤 Utilisateur: {user.username}")
     
-    # Mettre à jour le username si fourni
     if data.username is not None and data.username != "":
         if User.objects.filter(username=data.username).exclude(id=user.id).exists():
             return {"error": "Ce nom d'utilisateur est deja pris"}
         user.username = data.username
         print(f"✅ Username mis a jour: {data.username}")
     
-    # Mettre à jour le téléphone si fourni
     if data.phone is not None:
         user.phone = data.phone
         print(f"✅ Phone mis a jour: {data.phone}")
     
-    # Mettre à jour le mot de passe si fourni
     if data.password and data.password != "":
         user.password = make_password(data.password)
         print("✅ Mot de passe mis a jour")
