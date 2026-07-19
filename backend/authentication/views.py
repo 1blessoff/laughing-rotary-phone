@@ -327,7 +327,7 @@ def request_password_reset(request, data: PasswordResetSchema):
     try:
         user = User.objects.get(email=data.email)
     except User.DoesNotExist:
-        print(f"❌ Email non trouve: {data.email}")
+        print(f" Email non trouve: {data.email}")
         return {"error": "Aucun compte avec cet email"}
     
     code = ''.join(random.choices(string.digits, k=6))
