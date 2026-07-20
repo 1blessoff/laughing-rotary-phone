@@ -102,99 +102,99 @@ async def get_request(endpoint: str, params: dict = None):
     try:
         session = await get_session()
         cookies_before = {k: v.value for k, v in session._cookie_jar.filter_cookies(url).items()}
-        print(f"🍪 Cookies avant requete GET: {cookies_before}")
+        print(f"Cookies avant requete GET: {cookies_before}")
         
         timeout = aiohttp.ClientTimeout(total=120)
         async with session.get(url, params=params, timeout=timeout) as response:
-            print(f"📊 Status: {response.status}")
+            print(f"Status: {response.status}")
             
             cookies_after = {k: v.value for k, v in session._cookie_jar.filter_cookies(url).items()}
-            print(f"🍪 Cookies après requete GET: {cookies_after}")
+            print(f" Cookies après requete GET: {cookies_after}")
             
             set_cookie = response.headers.get('Set-Cookie')
             if set_cookie:
-                print(f"📋 Set-Cookie header: {set_cookie}")
+                print(f" Set-Cookie header: {set_cookie}")
                 
             try:
                 result = await response.json()
-                print(f"✅ Result: {result}")
+                print(f" Result: {result}")
                 return result
             except Exception:
                 text = await response.text()
-                print(f"❌ Response text: {text}")
+                print(f" Response text: {text}")
                 return {"error": f"Erreur de parsing: {text}"}
                 
     except asyncio.TimeoutError:
-        print("⏰ ERREUR: Timeout")
+        print("ERREUR: Timeout")
         return {"error": "Le serveur ne répond pas (timeout)"}
     except aiohttp.ClientError as e:
-        print(f"❌ ERREUR ClientError: {e}")
+        print(f"ERREUR ClientError: {e}")
         return {"error": f"Erreur de connexion: {e}"}
     except Exception as e:
-        print(f"❌ ERREUR: {e}")
+        print(f" ERREUR: {e}")
         return {"error": str(e)}
 
 async def put_request(endpoint: str, data: dict = None, params: dict = None):
     """Fonction generique pour les requetes PUT asynchrones"""
     url = f"{API_URL}/{endpoint}"
     print(f"\n{'='*60}")
-    print(f"📤 PUT {endpoint}")
-    print(f"📍 URL: {url}")
+    print(f" PUT {endpoint}")
+    print(f" URL: {url}")
     if params:
-        print(f"📋 Params: {params}")
+        print(f"Params: {params}")
     if data:
-        print(f"📦 Data: {data}")
+        print(f"Data: {data}")
     
     try:
         session = await get_session()
         cookies_before = {k: v.value for k, v in session._cookie_jar.filter_cookies(url).items()}
-        print(f"🍪 Cookies avant requete PUT: {cookies_before}")
+        print(f"Cookies avant requete PUT: {cookies_before}")
         
         timeout = aiohttp.ClientTimeout(total=120)
         async with session.put(url, params=params, json=data, timeout=timeout) as response:
-            print(f"📊 Status: {response.status}")
+            print(f" Status: {response.status}")
             
             cookies_after = {k: v.value for k, v in session._cookie_jar.filter_cookies(url).items()}
-            print(f"🍪 Cookies après requete PUT: {cookies_after}")
+            print(f" Cookies après requete PUT: {cookies_after}")
             
             try:
                 result = await response.json()
-                print(f"✅ Result: {result}")
+                print(f"Result: {result}")
                 return result
             except Exception as e:
                 text = await response.text()
-                print(f"❌ Response text: {text}")
+                print(f"Response text: {text}")
                 return {"error": f"Erreur de parsing: {e}"}
                 
     except Exception as e:
-        print(f"❌ ERREUR: {e}")
+        print(f"ERREUR: {e}")
         return {"error": str(e)}
 
 async def delete_request(endpoint: str, params: dict = None):
     """Fonction generique pour les requetes DELETE asynchrones"""
     url = f"{API_URL}/{endpoint}"
     print(f"\n{'='*60}")
-    print(f"📤 DELETE {endpoint}")
-    print(f"📍 URL: {url}")
+    print(f"DELETE {endpoint}")
+    print(f" URL: {url}")
     if params:
-        print(f"📋 Params: {params}")
+        print(f"Params: {params}")
     
     try:
         session = await get_session()
         timeout = aiohttp.ClientTimeout(total=120)
         async with session.delete(url, params=params, timeout=timeout) as response:
-            print(f"📊 Status: {response.status}")
+            print(f"Status: {response.status}")
             try:
                 result = await response.json()
-                print(f"✅ Result: {result}")
+                print(f"Result: {result}")
                 return result
             except Exception as e:
                 text = await response.text()
-                print(f"❌ Response text: {text}")
+                print(f"Response text: {text}")
                 return {"error": f"Erreur de parsing: {e}"}
                 
     except Exception as e:
-        print(f"❌ ERREUR: {e}")
+        print(f"ERREUR: {e}")
         return {"error": str(e)}
 
 
