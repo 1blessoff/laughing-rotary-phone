@@ -12,7 +12,7 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.LIGHT
     page.padding = 20
     page.window_width = 600
-    page.window_height = 900
+    page.window_height = 960
 
     # NAVIGATION
 
