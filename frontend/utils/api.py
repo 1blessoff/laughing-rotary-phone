@@ -204,7 +204,6 @@ async def delete_request(endpoint: str, params: dict = None):
 
 async def login(username: str, password: str):
     print(f"\n LOGIN: {username}")
-    await close_session()
     return await post_request("auth/login", {"username": username, "password": password})
 
 async def register(data: dict):
