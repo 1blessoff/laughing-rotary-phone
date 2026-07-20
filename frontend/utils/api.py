@@ -55,7 +55,7 @@ async def post_request(endpoint: str, data: dict = None, params: dict = None):
         cookies_before = {k: v.value for k, v in session._cookie_jar.filter_cookies(url).items()}
         print(f"Cookies avant requete: {cookies_before}")
         
-        timeout = aiohttp.ClientTimeout(total=60)
+        timeout = aiohttp.ClientTimeout(total=120)
         async with session.post(url, params=params, json=data, timeout=timeout) as response:
             print(f"Status: {response.status}")
             
@@ -104,7 +104,7 @@ async def get_request(endpoint: str, params: dict = None):
         cookies_before = {k: v.value for k, v in session._cookie_jar.filter_cookies(url).items()}
         print(f"🍪 Cookies avant requete GET: {cookies_before}")
         
-        timeout = aiohttp.ClientTimeout(total=60)
+        timeout = aiohttp.ClientTimeout(total=120)
         async with session.get(url, params=params, timeout=timeout) as response:
             print(f"📊 Status: {response.status}")
             
@@ -150,7 +150,7 @@ async def put_request(endpoint: str, data: dict = None, params: dict = None):
         cookies_before = {k: v.value for k, v in session._cookie_jar.filter_cookies(url).items()}
         print(f"🍪 Cookies avant requete PUT: {cookies_before}")
         
-        timeout = aiohttp.ClientTimeout(total=60)
+        timeout = aiohttp.ClientTimeout(total=120)
         async with session.put(url, params=params, json=data, timeout=timeout) as response:
             print(f"📊 Status: {response.status}")
             
@@ -181,7 +181,7 @@ async def delete_request(endpoint: str, params: dict = None):
     
     try:
         session = await get_session()
-        timeout = aiohttp.ClientTimeout(total=60)
+        timeout = aiohttp.ClientTimeout(total=120)
         async with session.delete(url, params=params, timeout=timeout) as response:
             print(f"📊 Status: {response.status}")
             try:
