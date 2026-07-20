@@ -1,4 +1,4 @@
-c est juste un projet ecole t en fais pas pour la securite tant que ca vient par mail from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
