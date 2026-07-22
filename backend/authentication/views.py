@@ -10,7 +10,7 @@ from datetime import timedelta
 from typing import Optional 
 import random
 import string
-import os  # <-- AJOUTÉ pour debug
+import os  
 
 User = get_user_model()
 auth_router = Router()
