@@ -88,9 +88,8 @@ def main(page: ft.Page):
         else:
             go_to_login()
 
-    # ============================================
+    
     # STOCKER LES FONCTIONS
-    # ============================================
 
     session.set("go_to_login", go_to_login)
     session.set("go_to_register", go_to_register)
@@ -113,7 +112,7 @@ def main(page: ft.Page):
 
 
 if __name__ == "__main__":
-    # Récupération du port dynamique attribué par Render (10000 par défaut en local/fallback)
+    # Récupération du port dynamique 
     port = int(os.getenv("PORT", 8000))
     
     # Lancement du serveur Web Flet accessible sur le réseau
