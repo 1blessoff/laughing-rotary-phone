@@ -63,46 +63,65 @@ def redirect_by_role(page: ft.Page):
 
 def get_auth_header(page: ft.Page, title: str):
     """Header simplifié pour les pages d'authentification"""
+    is_mobile = page.width < 768
     return ft.Container(
         content=ft.Row([
-            ft.Text("Gestion Funéraire", size=18, 
+            ft.Text("Gestion Funéraire", size=20 if not is_mobile else 18, 
                     weight=ft.FontWeight.BOLD, color="white"),
         ], alignment=ft.MainAxisAlignment.CENTER),
         padding=15,
         bgcolor=COLOR_PRIMARY,
+        width=page.width,
     )
 
 def get_auth_container(page: ft.Page, content):
-    """Container principal pour les pages d'authentification"""
-    return ft.Container(
+    """Container principal pour les pages d'authentification avec scroll"""
+    is_mobile = page.width < 768
+    
+    # Utiliser SafeArea pour éviter les problèmes de notch sur mobile
+    return ft.SafeArea(
         content=ft.Column([
             get_auth_header(page, ""),
             ft.Container(
+                # Ajouter un ListView pour permettre le scroll sur mobile
+                content=ft.ListView(
+                    controls=[content],
+                    padding=20 if not is_mobile else 15,
+                    spacing=0,
+                    expand=True,
+                ) if is_mobile else content,
+                expand=True,
+                bgcolor=COLOR_BG,
+                padding=20 if not is_mobile else 0,
+            ) if is_mobile else ft.Container(
                 content=content,
                 expand=True,
-                padding=ft.padding.only(left=15, top=20, right=15, bottom=20),
+                padding=20 if not is_mobile else 15,
                 bgcolor=COLOR_BG,
             ),
-        ], spacing=0, expand=True, scroll=ft.ScrollMode.AUTO),
+        ], spacing=0, expand=True),
         expand=True,
     )
 
 def get_auth_card(page: ft.Page, children):
     """Carte blanche pour les formulaires d'authentification"""
+    is_mobile = page.width < 768
     return ft.Container(
         content=ft.Column(children, spacing=15, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-        padding=20,
+        padding=30 if not is_mobile else 20,
         bgcolor=COLOR_CARD,
         border_radius=10,
         shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=ft.Colors.GREY_300, offset=ft.Offset(0, 4)),
+        width=450 if not is_mobile else page.width - 30,
     )
 
-def get_auth_field(label: str, password: bool = False, hint: str = None, 
+def get_auth_field(label: str, password: bool = False, width: int = None, hint: str = None, 
                     max_length: int = None, input_filter: ft.InputFilter = None):
     """Champ de formulaire uniforme"""
     return ft.TextField(
         label=label,
         password=password,
+        width=width,
         hint_text=hint,
         max_length=max_length,
         input_filter=input_filter,
@@ -111,19 +130,22 @@ def get_auth_field(label: str, password: bool = False, hint: str = None,
         focused_border_color=COLOR_PRIMARY,
         focused_color=COLOR_PRIMARY,
         cursor_color=COLOR_PRIMARY,
-        expand=True,  # Utiliser expand au lieu de width fixe
     )
 
-def get_auth_button(text: str, on_click, bgcolor: str = COLOR_PRIMARY):
+def get_auth_button(text: str, on_click, width: int = None, bgcolor: str = COLOR_PRIMARY):
     """Bouton uniforme"""
-    return ft.ElevatedButton(
+    return ft.Button(
         text,
         on_click=on_click,
         bgcolor=bgcolor,
         color="white",
+        width=width,
         height=45,
-        expand=True,  # Utiliser expand au lieu de width fixe
     )
+
+def get_auth_message(message: str, color: str = ft.Colors.RED):
+    """Message d'erreur ou de succès uniforme"""
+    return ft.Text(message, color=color, size=14, text_align=ft.TextAlign.CENTER)
 
 # ============================================
 # PAGE DE CONNEXION
@@ -136,8 +158,11 @@ def login_page(page: ft.Page):
     page.bgcolor = COLOR_BG
     page.theme_mode = ft.ThemeMode.LIGHT
     
-    username = get_auth_field("Nom d'utilisateur")
-    password = get_auth_field("Mot de passe", password=True)
+    is_mobile = page.width < 768
+    field_width = 350 if not is_mobile else page.width - 60
+    
+    username = get_auth_field("Nom d'utilisateur", width=field_width)
+    password = get_auth_field("Mot de passe", password=True, width=field_width)
     message = ft.Text("", color=ft.Colors.RED, size=14, text_align=ft.TextAlign.CENTER)
     
     def on_login(e):
@@ -194,7 +219,7 @@ def login_page(page: ft.Page):
     
     # Contenu principal
     content = ft.Column([
-        ft.Text("Connexion", size=24, weight=ft.FontWeight.BOLD, color=COLOR_PRIMARY_DARK),
+        ft.Text("Connexion", size=28 if not is_mobile else 24, weight=ft.FontWeight.BOLD, color=COLOR_PRIMARY_DARK),
         ft.Divider(height=10, color=ft.Colors.GREY_300),
         ft.Text("Connectez-vous à votre espace", size=14, color=ft.Colors.GREY_600),
         ft.Divider(height=10),
@@ -202,14 +227,14 @@ def login_page(page: ft.Page):
             username,
             password,
             message,
-            get_auth_button("Se connecter", on_login),
+            get_auth_button("Se connecter", on_login, width=field_width),
             ft.Row([
                 ft.TextButton("Mot de passe oublié", on_click=lambda e: forgot_password_page(page), 
                               style=ft.ButtonStyle(color=COLOR_PRIMARY)),
                 ft.Text("|", size=14, color=ft.Colors.GREY_400),
                 ft.TextButton("Créer un compte", on_click=lambda e: register_page(page),
                               style=ft.ButtonStyle(color=COLOR_PRIMARY)),
-            ], alignment=ft.MainAxisAlignment.CENTER, spacing=5, wrap=True),
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=5, wrap=True),  # Ajout de wrap=True pour mobile
         ]),
     ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=20)
     
@@ -236,7 +261,7 @@ def mfa_page(page: ft.Page):
         page.controls.clear()
         content = ft.Column([
             ft.Text("Session expirée. Veuillez vous reconnecter.", size=18, color=ft.Colors.RED),
-            get_auth_button("Retour à la connexion", lambda e: login_page(page)),
+            get_auth_button("Retour à la connexion", lambda e: login_page(page), width=200),
         ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=20)
         page.controls.append(get_auth_container(page, content))
         page.update()
@@ -245,8 +270,12 @@ def mfa_page(page: ft.Page):
     page.controls.clear()
     print(f"=== mfa_page: user_id={user_id}, username={username}, role={mfa_role} ===")
     
+    is_mobile = page.width < 768
+    field_width = 350 if not is_mobile else page.width - 60
+    
     code = ft.TextField(
         label="Code MFA (6 chiffres)",
+        width=field_width,
         max_length=6,
         input_filter=ft.NumbersOnlyInputFilter(),
         bgcolor=ft.Colors.WHITE,
@@ -254,7 +283,6 @@ def mfa_page(page: ft.Page):
         focused_border_color=COLOR_PRIMARY,
         focused_color=COLOR_PRIMARY,
         cursor_color=COLOR_PRIMARY,
-        expand=True,
     )
     message = ft.Text("", color=ft.Colors.RED, size=14, text_align=ft.TextAlign.CENTER)
     
@@ -325,7 +353,7 @@ def mfa_page(page: ft.Page):
             page.update()
     
     content = ft.Column([
-        ft.Text("Vérification MFA", size=24, weight=ft.FontWeight.BOLD, color=COLOR_PRIMARY_DARK),
+        ft.Text("Vérification MFA", size=28 if not is_mobile else 24, weight=ft.FontWeight.BOLD, color=COLOR_PRIMARY_DARK),
         ft.Divider(height=10, color=ft.Colors.GREY_300),
         ft.Text("Un code a été envoyé à votre email.", size=14, color=ft.Colors.GREY_600),
         ft.Text(f"Connecté en tant que: {username}", size=14, color=COLOR_PRIMARY),
@@ -333,7 +361,7 @@ def mfa_page(page: ft.Page):
         get_auth_card(page, [
             code,
             message,
-            get_auth_button("Vérifier", on_verify),
+            get_auth_button("Vérifier", on_verify, width=field_width),
             ft.TextButton("Retour à la connexion", on_click=lambda e: login_page(page),
                           style=ft.ButtonStyle(color=COLOR_PRIMARY)),
         ]),
@@ -355,11 +383,14 @@ def register_page(page: ft.Page):
     page.bgcolor = COLOR_BG
     page.theme_mode = ft.ThemeMode.LIGHT
     
-    username = get_auth_field("Nom d'utilisateur")
-    email = get_auth_field("Email")
-    phone = get_auth_field("Téléphone")
-    password = get_auth_field("Mot de passe (8-16 caractères)", password=True)
-    password2 = get_auth_field("Confirmer le mot de passe", password=True)
+    is_mobile = page.width < 768
+    field_width = 350 if not is_mobile else page.width - 60
+    
+    username = get_auth_field("Nom d'utilisateur", width=field_width)
+    email = get_auth_field("Email", width=field_width)
+    phone = get_auth_field("Téléphone", width=field_width)
+    password = get_auth_field("Mot de passe (8-16 caractères)", password=True, width=field_width)
+    password2 = get_auth_field("Confirmer le mot de passe", password=True, width=field_width)
     message = ft.Text("", color=ft.Colors.RED, size=14, text_align=ft.TextAlign.CENTER)
     
     def on_register(e):
@@ -442,7 +473,7 @@ def register_page(page: ft.Page):
             page.update()
     
     content = ft.Column([
-        ft.Text("Inscription", size=24, weight=ft.FontWeight.BOLD, color=COLOR_PRIMARY_DARK),
+        ft.Text("Inscription", size=28 if not is_mobile else 24, weight=ft.FontWeight.BOLD, color=COLOR_PRIMARY_DARK),
         ft.Divider(height=10, color=ft.Colors.GREY_300),
         ft.Text("Créez votre compte client", size=14, color=ft.Colors.GREY_600),
         ft.Divider(height=10),
@@ -453,7 +484,7 @@ def register_page(page: ft.Page):
             password,
             password2,
             message,
-            get_auth_button("S'inscrire", on_register),
+            get_auth_button("S'inscrire", on_register, width=field_width),
             ft.TextButton("Déjà un compte ? Se connecter", on_click=lambda e: login_page(page),
                           style=ft.ButtonStyle(color=COLOR_PRIMARY)),
         ]),
@@ -475,7 +506,10 @@ def forgot_password_page(page: ft.Page):
     page.bgcolor = COLOR_BG
     page.theme_mode = ft.ThemeMode.LIGHT
     
-    email = get_auth_field("Email")
+    is_mobile = page.width < 768
+    field_width = 350 if not is_mobile else page.width - 60
+    
+    email = get_auth_field("Email", width=field_width)
     message = ft.Text("", color=ft.Colors.RED, size=14, text_align=ft.TextAlign.CENTER)
     
     def on_request(e):
@@ -518,14 +552,14 @@ def forgot_password_page(page: ft.Page):
             page.update()
     
     content = ft.Column([
-        ft.Text("Mot de passe oublié", size=24, weight=ft.FontWeight.BOLD, color=COLOR_PRIMARY_DARK),
+        ft.Text("Mot de passe oublié", size=28 if not is_mobile else 24, weight=ft.FontWeight.BOLD, color=COLOR_PRIMARY_DARK),
         ft.Divider(height=10, color=ft.Colors.GREY_300),
         ft.Text("Entrez votre email pour recevoir un code de réinitialisation.", size=14, color=ft.Colors.GREY_600),
         ft.Divider(height=10),
         get_auth_card(page, [
             email,
             message,
-            get_auth_button("Envoyer le code", on_request),
+            get_auth_button("Envoyer le code", on_request, width=field_width),
             ft.TextButton("Retour à la connexion", on_click=lambda e: login_page(page),
                           style=ft.ButtonStyle(color=COLOR_PRIMARY)),
         ]),
@@ -547,17 +581,20 @@ def reset_confirm_page(page: ft.Page, email_val: str):
     page.bgcolor = COLOR_BG
     page.theme_mode = ft.ThemeMode.LIGHT
     
+    is_mobile = page.width < 768
+    field_width = 350 if not is_mobile else page.width - 60
+    
     code = ft.TextField(
         label="Code de réinitialisation",
+        width=field_width,
         bgcolor=ft.Colors.WHITE,
         border_color=COLOR_PRIMARY,
         focused_border_color=COLOR_PRIMARY,
         focused_color=COLOR_PRIMARY,
         cursor_color=COLOR_PRIMARY,
-        expand=True,
     )
-    new_password = get_auth_field("Nouveau mot de passe (8-16 caractères)", password=True)
-    new_password2 = get_auth_field("Confirmer le mot de passe", password=True)
+    new_password = get_auth_field("Nouveau mot de passe (8-16 caractères)", password=True, width=field_width)
+    new_password2 = get_auth_field("Confirmer le mot de passe", password=True, width=field_width)
     message = ft.Text("", color=ft.Colors.RED, size=14, text_align=ft.TextAlign.CENTER)
     
     def on_confirm(e):
@@ -621,7 +658,7 @@ def reset_confirm_page(page: ft.Page, email_val: str):
             page.update()
     
     content = ft.Column([
-        ft.Text("Confirmation", size=24, weight=ft.FontWeight.BOLD, color=COLOR_PRIMARY_DARK),
+        ft.Text("Confirmation", size=28 if not is_mobile else 24, weight=ft.FontWeight.BOLD, color=COLOR_PRIMARY_DARK),
         ft.Divider(height=10, color=ft.Colors.GREY_300),
         ft.Text(f"Un code a été envoyé à {email_val}", size=14, color=ft.Colors.GREY_600),
         ft.Divider(height=10),
@@ -630,7 +667,7 @@ def reset_confirm_page(page: ft.Page, email_val: str):
             new_password,
             new_password2,
             message,
-            get_auth_button("Réinitialiser", on_confirm),
+            get_auth_button("Réinitialiser", on_confirm, width=field_width),
             ft.TextButton("Retour à la connexion", on_click=lambda e: login_page(page),
                           style=ft.ButtonStyle(color=COLOR_PRIMARY)),
         ]),
