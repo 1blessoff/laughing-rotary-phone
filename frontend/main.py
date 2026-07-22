@@ -1,10 +1,15 @@
+import os
+import atexit
+import asyncio
 import flet as ft
+
 from pages.auth import login_page, register_page, mfa_page, forgot_password_page
 from pages.dashboard_admin import admin_dashboard
 from pages.dashboard_agent import agent_dashboard
 from pages.dashboard_client import client_dashboard
 from pages.dashboard_secretariat import secretariat_dashboard
 from utils.session import session
+from utils.api import close_session
 
 
 def main(page: ft.Page):
@@ -94,25 +99,27 @@ def main(page: ft.Page):
     session.set("go_to_forgot_password", go_to_forgot_password)
     session.set("go_to_logout", go_to_logout)
 
-    # Dans main.py, avant la fin
-    import atexit
-    from utils.api import close_session
-
     # Fermer la session proprement
     @atexit.register
     def cleanup():
-        import asyncio
         try:
             asyncio.run(close_session())
-        except:
+        except Exception:
             pass
-    
-    # DEMARRAGE
-    
 
+    # DEMARRAGE
     page.on_route_change = route_change
     page.go("/dashboard" if session.get("user") else "/login")
 
- 
+
 if __name__ == "__main__":
-    ft.app(target=main)
+    # Récupération du port dynamique attribué par Render (10000 par défaut en local/fallback)
+    port = int(os.getenv("PORT", 8000))
+    
+    # Lancement du serveur Web Flet accessible sur le réseau
+    ft.app(
+        target=main,
+        view=ft.AppView.WEB_BROWSER,
+        host="0.0.0.0",
+        port=port
+    )
