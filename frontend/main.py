@@ -63,7 +63,7 @@ def main(page: ft.Page):
         go_to_login()
 
     # ============================================
-    # RENDU DE ROUTE (RESPONSIVE & CLEAN)
+    # RENDU DE ROUTE (FIXED ALIGNMENT)
     # ============================================
     def render_route():
         page.controls.clear()
@@ -87,8 +87,7 @@ def main(page: ft.Page):
         else:
             login_page(page)
 
-        # Ajustement responsive automatique
-        # Si nous sommes sur les pages d'authentification, on enveloppe dans une carte centrée responsive
+        # Encapsulation Responsive
         if route != "/dashboard" and len(page.controls) > 0:
             content_controls = list(page.controls)
             page.controls.clear()
@@ -99,16 +98,16 @@ def main(page: ft.Page):
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     alignment=ft.MainAxisAlignment.CENTER,
                 ),
-                alignment=ft.alignment.center,
+                alignment=ft.Alignment(0, 0),  # <--- FIX: Utilisation du constructeur Alignment(0,0) pour le centrage
                 padding=20,
-                max_width=500,  # Largeur optimale sur Desktop sans écraser sur Mobile
+                max_width=500,  # Largeur optimale PC / Mobile
                 expand=True,
             )
             
             page.add(
                 ft.Container(
                     content=responsive_wrapper,
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment(0, 0), # <--- FIX: Evite l'erreur AttributeError
                     expand=True,
                 )
             )
