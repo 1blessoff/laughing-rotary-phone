@@ -63,7 +63,7 @@ def main(page: ft.Page):
         go_to_login()
 
     # ============================================
-    # RENDU DE ROUTE (FIXED ALIGNMENT)
+    # RENDU DE ROUTE (CORRECTION MAX_WIDTH & ALIGNMENT)
     # ============================================
     def render_route():
         page.controls.clear()
@@ -98,16 +98,16 @@ def main(page: ft.Page):
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     alignment=ft.MainAxisAlignment.CENTER,
                 ),
-                alignment=ft.Alignment(0, 0),  # <--- FIX: Utilisation du constructeur Alignment(0,0) pour le centrage
+                alignment=ft.Alignment(0, 0),
                 padding=20,
-                max_width=500,  # Largeur optimale PC / Mobile
+                width=500,  # <--- FIX: Utilisation de 'width' au lieu de 'max_width'
                 expand=True,
             )
             
             page.add(
                 ft.Container(
                     content=responsive_wrapper,
-                    alignment=ft.Alignment(0, 0), # <--- FIX: Evite l'erreur AttributeError
+                    alignment=ft.Alignment(0, 0),
                     expand=True,
                 )
             )
@@ -145,7 +145,8 @@ def main(page: ft.Page):
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
-    ft.app(
+    # FIX: Utilisation de ft.run() à la place de ft.app() pour Flet 0.80+
+    ft.run(
         target=main,
         view=ft.AppView.WEB_BROWSER,
         host="0.0.0.0",
