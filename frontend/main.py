@@ -15,9 +15,12 @@ from utils.api import close_session
 def main(page: ft.Page):
     page.title = "Gestion Funéraire"
     page.theme_mode = ft.ThemeMode.LIGHT
-    page.padding = 20
-    page.window_width = 600
-    page.window_height = 960
+    
+    # Configuration Responsive
+    page.padding = 0
+    page.spacing = 0
+    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    page.vertical_alignment = ft.MainAxisAlignment.START
 
     # NAVIGATION
     def go_to_login():
@@ -43,7 +46,6 @@ def main(page: ft.Page):
             go_to_login()
             return
         
-        # Vider la page avant d'afficher le dashboard
         page.controls.clear()
         role = user.get("role", "client")
         if role == "admin":
@@ -61,12 +63,13 @@ def main(page: ft.Page):
         go_to_login()
 
     # ============================================
-    # RENDU DE ROUTE (Régle la page blanche)
+    # RENDU DE ROUTE (RESPONSIVE & CLEAN)
     # ============================================
     def render_route():
-        page.controls.clear()  # Vider les anciens éléments graphiques
+        page.controls.clear()
         route = page.route
 
+        # Déterminer la page à charger
         if route in ["/login", "/"]:
             if session.get("user"):
                 go_to_dashboard()
@@ -84,7 +87,33 @@ def main(page: ft.Page):
         else:
             login_page(page)
 
-        page.update()  # Forcer la mise à jour visuelle du navigateur
+        # Ajustement responsive automatique
+        # Si nous sommes sur les pages d'authentification, on enveloppe dans une carte centrée responsive
+        if route != "/dashboard" and len(page.controls) > 0:
+            content_controls = list(page.controls)
+            page.controls.clear()
+            
+            responsive_wrapper = ft.Container(
+                content=ft.Column(
+                    controls=content_controls,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    alignment=ft.MainAxisAlignment.CENTER,
+                ),
+                alignment=ft.alignment.center,
+                padding=20,
+                max_width=500,  # Largeur optimale sur Desktop sans écraser sur Mobile
+                expand=True,
+            )
+            
+            page.add(
+                ft.Container(
+                    content=responsive_wrapper,
+                    alignment=ft.alignment.center,
+                    expand=True,
+                )
+            )
+
+        page.update()
 
     def route_change(e):
         render_route()
@@ -110,7 +139,6 @@ def main(page: ft.Page):
     # INITIALISATION
     page.on_route_change = route_change
     
-    # Route initiale
     initial_route = "/dashboard" if session.get("user") else "/login"
     page.route = initial_route
     render_route()
