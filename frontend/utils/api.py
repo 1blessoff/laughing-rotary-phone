@@ -10,8 +10,8 @@ async def get_session():
     global _session
     if _session is None or _session.closed:
         cookie_jar = aiohttp.CookieJar(unsafe=True)
-        # Timeout optimisé : 15 secondes au lieu de 120
-        timeout = aiohttp.ClientTimeout(total=15, connect=5)
+        # Timeout optimisé : 30 secondes au lieu de 15
+        timeout = aiohttp.ClientTimeout(total=30, connect=10)
         _session = aiohttp.ClientSession(
             cookie_jar=cookie_jar, 
             trust_env=False, 
