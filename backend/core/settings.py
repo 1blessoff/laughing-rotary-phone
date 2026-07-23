@@ -196,31 +196,29 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# ============================================
-# EMAIL CONFIGURATION (depuis .env)
-# ============================================
 
-EMAIL_BACKEND = os.getenv(
-    'EMAIL_BACKEND',
-    'django.core.mail.backends.console.EmailBackend'
-)
 
-# Si EMAIL_HOST_USER est défini dans .env, on utilise SMTP (Gmail)
-if os.getenv('EMAIL_HOST_USER'):
-    EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-    EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
-    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
-    EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False') == 'True'
-    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@gestionfuneraire.com')
+# EMAIL CONFIGURATION (Brevo SMTP via Render)
 
-    if os.getenv('EMAIL_SSL_VERIFY', 'True') == 'False':
-        EMAIL_BACKEND = 'core.email_backend.InsecureSMTPEmailBackend'
-    else:
-        EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# En développement local sans variables SMTP, on garde la console, sinon SMTP
+if os.getenv('BREVO_SMTP_KEY'):
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp-relay.brevo.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_USE_SSL = False
+    
+    EMAIL_HOST_USER = os.getenv('BREVO_LOGIN')
+    EMAIL_HOST_PASSWORD = os.getenv('BREVO_SMTP_KEY')
+    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+else:
+    # Fallback pour le développement local si les clés Brevo ne sont pas dans le .env
+    EMAIL_BACKEND = os.getenv(
+        'EMAIL_BACKEND',
+        'django.core.mail.backends.console.EmailBackend'
+    )
 
-EMAIL_TIMEOUT = 60
+EMAIL_TIMEOUT = 30
 
 # ============================================
 # GOOGLE AUTHENTICATOR (OTP)
