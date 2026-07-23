@@ -20,34 +20,31 @@ def main(page: ft.Page):
     page.window_height = 960
 
     # NAVIGATION
-
     def go_to_login():
         page.route = "/login"
-        page.update()
-        login_page(page)
+        render_route()
 
     def go_to_register():
         page.route = "/register"
-        page.update()
-        register_page(page)
+        render_route()
 
     def go_to_mfa():
         page.route = "/mfa"
-        page.update()
-        mfa_page(page)
+        render_route()
 
     def go_to_forgot_password():
         page.route = "/forgot-password"
-        page.update()
-        forgot_password_page(page)
+        render_route()
 
     def go_to_dashboard():
         page.route = "/dashboard"
-        page.update()
         user = session.get("user")
         if not user:
             go_to_login()
             return
+        
+        # Vider la page avant d'afficher le dashboard
+        page.controls.clear()
         role = user.get("role", "client")
         if role == "admin":
             admin_dashboard(page)
@@ -57,39 +54,44 @@ def main(page: ft.Page):
             secretariat_dashboard(page)
         else:
             client_dashboard(page)
+        page.update()
 
     def go_to_logout():
         session.clear()
         go_to_login()
 
-    
-    # ROUTES
-    
-
-    def route_change(e):
+    # ============================================
+    # RENDU DE ROUTE (Régle la page blanche)
+    # ============================================
+    def render_route():
+        page.controls.clear()  # Vider les anciens éléments graphiques
         route = page.route
 
-        # Routes publiques
-        if route == "/login" or route == "/":
+        if route in ["/login", "/"]:
             if session.get("user"):
                 go_to_dashboard()
-            else:
-                login_page(page)
+                return
+            login_page(page)
         elif route == "/register":
             register_page(page)
         elif route == "/mfa":
             mfa_page(page)
         elif route == "/forgot-password":
             forgot_password_page(page)
-
-        # Routes privées
         elif route == "/dashboard":
             go_to_dashboard()
+            return
         else:
-            go_to_login()
+            login_page(page)
 
-    # STOCKER LES FONCTIONS
+        page.update()  # Forcer la mise à jour visuelle du navigateur
 
+    def route_change(e):
+        render_route()
+
+    # ============================================
+    # STOCKER LES FONCTIONS DANS LA SESSION
+    # ============================================
     session.set("go_to_login", go_to_login)
     session.set("go_to_register", go_to_register)
     session.set("go_to_mfa", go_to_mfa)
@@ -97,7 +99,7 @@ def main(page: ft.Page):
     session.set("go_to_forgot_password", go_to_forgot_password)
     session.set("go_to_logout", go_to_logout)
 
-    # Fermer la session proprement
+    # Nettoyage à la fermeture
     @atexit.register
     def cleanup():
         try:
@@ -105,16 +107,17 @@ def main(page: ft.Page):
         except Exception:
             pass
 
-    # DEMARRAGE
+    # INITIALISATION
     page.on_route_change = route_change
-    page.go("/dashboard" if session.get("user") else "/login")
+    
+    # Route initiale
+    initial_route = "/dashboard" if session.get("user") else "/login"
+    page.route = initial_route
+    render_route()
 
 
 if __name__ == "__main__":
-    # Récupération du port dynamique attribué par Render (10000 par défaut en local/fallback)
     port = int(os.getenv("PORT", 8000))
-    
-    # Lancement du serveur Web Flet accessible sur le réseau
     ft.app(
         target=main,
         view=ft.AppView.WEB_BROWSER,
