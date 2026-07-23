@@ -145,9 +145,9 @@ def main(page: ft.Page):
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
-    # FIX: Utilisation de ft.run() à la place de ft.app() pour Flet 0.80+
+    # FIX: Utilisation de ft.run() à la place de ft.app()
     ft.run(
-        target=main,
+        main,
         view=ft.AppView.WEB_BROWSER,
         host="0.0.0.0",
         port=port
