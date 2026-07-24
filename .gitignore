@@ -13,7 +13,6 @@ ENV/
 pip-log.txt
 pip-delete-this-directory.txt
 *.egg-info/
-dist/
 build/
 *.egg
 

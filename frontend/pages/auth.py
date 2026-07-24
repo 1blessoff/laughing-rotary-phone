@@ -1,23 +1,25 @@
 import flet as ft
 from utils.session import session
 from utils.api import login, register, verify_mfa, request_password_reset, confirm_password_reset, get_current_user
+import re
 
-# ============================================
+
 # CONSTANTES DE STYLE
-# ============================================
 
 COLOR_PRIMARY = "#1976D2"
 COLOR_PRIMARY_DARK = "#1565C0"
 COLOR_BG = "#F5F7FA"
 COLOR_CARD = "#FFFFFF"
 
-# ============================================
+
 # FONCTIONS DE VALIDATION
-# ============================================
 
 def est_email_valide(email: str) -> bool:
-    domaines_autorises = ("@gmail.com", "@yahoo.fr")
-    return email.endswith(domaines_autorises)
+    """Valide n'importe quelle adresse e-mail au format valide"""
+    if not email:
+        return False
+    regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(regex, email.strip()))
 
 def est_mot_de_passe_valide(password: str) -> tuple:
     if len(password) < 8:
@@ -462,8 +464,8 @@ def register_page(page: ft.Page):
             message.color = ft.Colors.GREEN
             page.update()
             
-            import time
-            time.sleep(2)
+            import asyncio
+            await asyncio.sleep(2)
             login_page(page)
             
         except Exception as e:
@@ -647,8 +649,8 @@ def reset_confirm_page(page: ft.Page, email_val: str):
             message.color = ft.Colors.GREEN
             page.update()
             
-            import time
-            time.sleep(2)
+            import asyncio
+            await asyncio.sleep(2)
             login_page(page)
             
         except Exception as e:

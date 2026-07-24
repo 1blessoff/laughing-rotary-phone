@@ -6,86 +6,57 @@ from django.utils import timezone
 from ninja import Router, Schema
 from datetime import timedelta
 from typing import Optional 
-from mailjet_rest import Client
 import random
 import string
 import threading
 import os  
+import requests
 
 User = get_user_model()
 auth_router = Router()
 
-# ============================================
-# ENVOI EMAIL AVEC MAILJET (API REST)
-# ============================================
+
+
+
+
+# CONFIGURATION GOOGLE APPS SCRIPT VIA ENV
+
+APPS_SCRIPT_URL = os.environ.get("APPS_SCRIPT_URL")
+APPS_SCRIPT_SECRET = os.environ.get("APPS_SCRIPT_SECRET")
+
 
 def send_mail_async(subject, message, recipient_list):
-    """
-    Envoie l'email via l'API REST v3.1 de Mailjet.
-    """
-    print("=" * 60)
-    print("send_mail_async (Mailjet) - DEBUT")
-    print(f"Subject: {subject}")
-    print(f"Recipient: {recipient_list}")
-    
-    api_key = os.getenv('MAILJET_API_KEY')
-    api_secret = os.getenv('MAILJET_SECRET_KEY')
-    email_from = os.getenv('DEFAULT_FROM_EMAIL', 'koukachrist48@gmail.com')
-    
-    print("\n--- VARIABLES D'ENVIRONNEMENT MAILJET ---")
-    print(f"MAILJET_API_KEY: {'OK (defini)' if api_key else 'MANQUANT !'}")
-    print(f"MAILJET_SECRET_KEY: {'OK (defini)' if api_secret else 'MANQUANT !'}")
-    print(f"DEFAULT_FROM_EMAIL: {email_from}")
-    
-    if not api_key or not api_secret:
-        print("ERREUR MAILJET: Cles MAILJET_API_KEY ou MAILJET_SECRET_KEY non definies.")
-        print("=" * 60)
-        return
+    # Vérification que les variables d'environnement sont bien présentables
+    if not APPS_SCRIPT_URL or not APPS_SCRIPT_SECRET:
+        print("ERREUR: APPS_SCRIPT_URL ou APPS_SCRIPT_SECRET non configurés dans l'environnement")
+        return {"success": False, "error": "Variables d'environnement manquantes"}
 
-    mailjet = Client(auth=(api_key, api_secret), version='v3.1')
-    
-    recipients = [{"Email": email} for email in recipient_list]
-    
-    data = {
-        'Messages': [
-            {
-                "From": {
-                    "Email": email_from,
-                    "Name": "Gestion Funeraire"
-                },
-                "To": recipients,
-                "Subject": subject,
-                "TextPart": message,
-                "HTMLPart": f"""
-                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-                    <h2 style="color: #2b5c8f;">Gestion Funeraire</h2>
-                    <pre style="font-family: Arial, sans-serif; font-size: 14px; white-space: pre-wrap;">{message}</pre>
-                </div>
-                """
-            }
-        ]
-    }
-
-    print("\n--- TENTATIVE D'ENVOI MAILJET ---")
     try:
-        result = mailjet.send.create(data=data)
-        print(f"Status Code Mailjet: {result.status_code}")
-        if result.status_code == 200:
-            print(f"Email envoye avec succes a {recipient_list}")
-        else:
-            print(f"ERREUR MAILJET: {result.json()}")
+        response = requests.post(
+            APPS_SCRIPT_URL,
+            json={
+                "secret": APPS_SCRIPT_SECRET,
+                "to": recipient_list[0],
+                "subject": subject,
+                "message": message,
+            },
+            timeout=10,
+        )
+        result = response.json()
+        if result.get("success"):
+            print(f"Email envoyé avec succès à {recipient_list}")
+            return {"success": True}
+
+        print(f"Erreur Apps Script: {result.get('error')}")
+        return {"success": False, "error": result.get("error")}
+
     except Exception as e:
-        print(f"ERREUR EXCEPTION MAILJET: {e}")
-        import traceback
-        print(f"Traceback: {traceback.format_exc()}")
-    
-    print("send_mail_async - FIN")
-    print("=" * 60)
+        print(f"Erreur appel Apps Script: {e}")
+        return {"success": False, "error": str(e)}
 
 
-# ============================================
-# SCHEMAS
-# ============================================
+
+
 
 class RegisterSchema(Schema):
     username: str
